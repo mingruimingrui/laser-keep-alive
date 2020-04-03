@@ -139,8 +139,10 @@ class Batcher(object):
         texts = [self.tokenizer.tokenize(t) for t in texts]
         texts = self.bpe_model.apply(texts)
         return [
-            [self.dictionary.get(t, self.unk_index) for t in text.split()]
-            for text in texts
+            [
+                self.dictionary.get(t, self.unk_index)
+                for t in text.split()
+            ] + [self.eos_index] for text in texts
         ]
 
     def _collate_tokens(self, tokens: List[List[int]]) -> torch.Tensor:
@@ -196,7 +198,6 @@ class Batcher(object):
         batch_indices = []
         batch_texts = []
         batch_tokens = []
-        batch_lengths = []
         max_batch_length = 0
         for i in indices:
             if (
@@ -211,28 +212,28 @@ class Batcher(object):
                 )
             ):
                 # yield cur batch
+                batch_tokens = self._collate_tokens(batch_tokens)
                 yield (
                     batch_indices,
                     batch_texts,
-                    self._collate_tokens(batch_tokens),
-                    torch.LongTensor(batch_lengths)
+                    batch_tokens,
+                    torch.LongTensor([len(t) for t in batch_tokens])
                 )
                 batch_indices = []
                 batch_texts = []
                 batch_tokens = []
-                batch_lengths = []
                 max_batch_length = 0
 
             batch_indices.append(i)
             batch_texts.append(texts[i])
             batch_tokens.append(tokens[i])
-            batch_lengths.append(lengths[i])
             max_batch_length = max(max_batch_length, lengths[i])
 
         if len(batch_tokens) > 0:
+            batch_tokens = self._collate_tokens(batch_tokens)
             yield (
                 batch_indices,
                 batch_texts,
-                self._collate_tokens(batch_tokens),
-                torch.LongTensor(batch_lengths)
+                batch_tokens,
+                torch.LongTensor([len(t) for t in batch_tokens])
             )
