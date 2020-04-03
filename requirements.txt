@@ -1,0 +1,9 @@
+h5py>=2.0.0
+Cython>=0.29.6
+torch>=1.0
+fastBPE==0.1.0
+sacremoses==0.0.38
+jieba==0.39
+transliterate==1.10.2
+mecab-python3==0.996.5
+pandas>=1.0
