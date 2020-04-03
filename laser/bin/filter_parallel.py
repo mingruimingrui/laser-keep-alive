@@ -3,7 +3,7 @@
 
 import os
 import argparse
-from typing import Generator, List, Tuple
+from typing import List, Tuple
 
 import threading
 
@@ -148,10 +148,20 @@ def load_batchers(
 def init_output_files(args: argparse.Namespace):
     output_pref = os.path.abspath(args.output)
     os.makedirs(os.path.dirname(output_pref), exist_ok=True)
-    with open_text_file('{}.{}'.format(output_pref, args.langs[0]), 'w') as f:
+
+    src_outpath = '{}.{}'.format(output_pref, args.langs[0])
+    tgt_outpath = '{}.{}'.format(output_pref, args.langs[1])
+
+    with open_text_file(src_outpath, 'w'):
         pass
-    with open_text_file('{}.{}'.format(output_pref, args.langs[1]), 'w') as f:
+    with open_text_file(tgt_outpath, 'w'):
         pass
+
+    if args.output_filtered:
+        with open_text_file(src_outpath + '.filtered', 'w'):
+            pass
+        with open_text_file(tgt_outpath + '.filtered', 'w'):
+            pass
 
 
 def append_results_to_file(
@@ -167,12 +177,24 @@ def append_results_to_file(
 
     src_outpath = '{}.{}'.format(args.output, args.langs[0])
     tgt_outpath = '{}.{}'.format(args.output, args.langs[1])
+    src_embeddings = src_embeddings.astype(np.float32)
+    tgt_embeddings = tgt_embeddings.astype(np.float32)
     l2_dists = np.sqrt(np.sum((src_embeddings - tgt_embeddings) ** 2, axis=1))
 
     with open_text_file(src_outpath, 'a') as fsrc:
         with open_text_file(tgt_outpath, 'a') as ftgt:
             for i, d in enumerate(l2_dists):
                 if d <= args.threshold:
+                    fsrc.write(src_texts[i])
+                    ftgt.write(tgt_texts[i])
+
+    if not args.output_filtered:
+        return
+
+    with open_text_file(src_outpath + '.filtered', 'a') as fsrc:
+        with open_text_file(tgt_outpath + '.filtered', 'a') as ftgt:
+            for i, d in enumerate(l2_dists):
+                if d > args.threshold:
                     fsrc.write(src_texts[i])
                     ftgt.write(tgt_texts[i])
 
@@ -224,15 +246,27 @@ def main(args):
 
         return chunk_texts, np.array(chunk_embeddings)
 
+    init_output_files(args)
+
     # Loop through each chunk
     # 1. Create batches (on subprocesses)
     # 2. Inference with bilstm
     # 3. Save results to file
     with tqdm() as pbar:
-        with
+        with multiprocessing.Pool(num_workers) as pool:
+            for src_batches, tgt_batches in pool.imap(
+                create_batches, create_loader()
+            ):
+                semaphore.release()
+                src_texts, src_embeddings = process_batches(src_batches)
+                tgt_texts, tgt_embeddings = process_batches(tgt_batches)
+                pbar.update(len(src_texts))
 
-    with multiprocessing.Pool(args.num_workers) as pool:
-        for src_batches, tgt_batches in pool.imap(worker_fn, create_loader()):
-            semaphore.release()
-            src_texts, src_embeddings = process_chunk(src_batches)
-            tgt_texts, tgt_embeddings = process_chunk(tgt_batches)
+                append_results_to_file(
+                    src_texts, src_embeddings,
+                    tgt_texts, tgt_embeddings,
+                    args,
+                )
+
+    time_taken = time() - start_time
+    print('Finished in {:.1f}s'.format(time_taken))
