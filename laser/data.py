@@ -175,6 +175,8 @@ class Batcher(object):
         self, texts: Iterator[str]
     ) -> Generator[BATCH_TYPE, None, None]:
         """Create batches from raw texts
+        Sequences in each batch will be sorted based on longest to shortest.
+        Batches will also be right padded.
 
         Arguments:
             texts {Iterator[str]} -- A list of raw texts
