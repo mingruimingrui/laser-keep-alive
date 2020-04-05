@@ -3,18 +3,6 @@ environment for the open-source Facebook AI Research (FAIR) project,
 Language-Agnostic SEntence Representations (LASER).
 
 
-- [Installation](#installation)
-- [Basic Usage](#basic-usage)
-  - [Script Example](#script-example)
-  - [Commandline Tool](#commandline-tool)
-    - [**`encode`**](#encode)
-    - [**`filter`**](#filter)
-- [Downloading Pretrained Model](#downloading-pretrained-model)
-- [Credits](#credits)
-- [License](#license)
-- [Citation](#citation)
-
-
 # Installation
 
 Currently installation can only be done using the source code.
