@@ -64,7 +64,6 @@ $ python -m laser
 usage: python -m laser [-h] {encode,filter} ...
 
 Language-Agnostic SEntence Representations
-https://github.com/facebookresearch/LASER/
 
 positional arguments:
   {encode,filter}
