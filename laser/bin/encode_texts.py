@@ -246,6 +246,7 @@ def main(args):
     # Load encoder
     device = determine_device(args)
     encoder, dictionary = load_model_from_file(args.model)
+    encoder = encoder.eval()
     encoder = encoder.to(device)
     if args.fp16:
         encoder = encoder.half()
@@ -271,7 +272,7 @@ def main(args):
             outputs = encoder.forward(
                 tokens.to(device),
                 lengths.to(device)
-            )['sentemb']
+            ).sentemb
             outputs = outputs.detach().cpu().numpy()
 
             for i, text, embedding in zip(indices, texts, outputs):

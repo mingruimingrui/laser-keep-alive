@@ -2,6 +2,7 @@
 """
 
 import warnings
+import unicodedata
 from typing import Iterator, Generator, Tuple, List, Optional
 
 import torch
@@ -37,6 +38,9 @@ class Tokenizer(object):
         self.tokenizer = MosesTokenizer(lang=lang)
 
         if self.lang == 'zh':
+            import opencc
+            self.opencc_converter = opencc.OpenCC('tw2s')
+
             import jieba
             self.jieba_tokenizer = jieba.dt
 
@@ -58,6 +62,7 @@ class Tokenizer(object):
             str -- Tokens joined by whitespace
         """
         text = text.lower()
+        text = unicodedata.normalize('NFKC', text)
         text = self.punct_normalizer.normalize(text)
         text = self.tokenizer.tokenize(
             text,
@@ -67,6 +72,7 @@ class Tokenizer(object):
         )
 
         if self.lang == 'zh':
+            text = self.opencc_converter.convert(text)
             tokens = self.jieba_tokenizer.cut(text, cut_all=False, HMM=True)
             text = ' '.join(tokens)
 
@@ -177,6 +183,8 @@ class Batcher(object):
         """Create batches from raw texts
         Sequences in each batch will be sorted based on longest to shortest.
         Batches will also be right padded.
+
+        TODO: Should warn if too many unknown tokens are produced
 
         Arguments:
             texts {Iterator[str]} -- A list of raw texts

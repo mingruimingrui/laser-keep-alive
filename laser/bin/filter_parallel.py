@@ -212,6 +212,7 @@ def main(args):
     # Load encoder
     device = determine_device(args)
     encoder, dictionary = load_model_from_file(args.model)
+    encoder = encoder.eval()
     encoder = encoder.to(device)
     if args.fp16:
         encoder = encoder.half()
@@ -237,7 +238,7 @@ def main(args):
             outputs = encoder.forward(
                 tokens.to(device),
                 lengths.to(device)
-            )['sentemb']
+            ).sentemb
             outputs = outputs.detach().cpu().numpy()
 
             for i, text, embedding in zip(indices, texts, outputs):
@@ -258,6 +259,7 @@ def main(args):
                 create_batches, create_loader()
             ):
                 semaphore.release()
+
                 src_texts, src_embeddings = process_batches(src_batches)
                 tgt_texts, tgt_embeddings = process_batches(tgt_batches)
                 pbar.update(len(src_texts))
