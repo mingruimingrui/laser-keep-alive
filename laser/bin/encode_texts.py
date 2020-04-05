@@ -16,7 +16,7 @@ import numpy as np
 
 from laser.data import Batcher, Batch
 from laser.encoder import load_encoder_from_file
-from laser.utils import open_text_file
+from laser.utils import open_text_file, determine_device
 from laser import generator_utils as gen_utils
 
 CACHE = {}
@@ -89,12 +89,6 @@ def add_options(parser: argparse.ArgumentParser) -> argparse.ArgumentParser:
         help='Number of workers to use to generate new batches')
 
     return parser
-
-
-def determine_device(args: argparse.Namespace):
-    if args.gpu and torch.cuda.is_available():
-        return torch.device('cuda:0')
-    return torch.device('cpu')
 
 
 def create_batcher(dictionary: dict, args: argparse.Namespace) -> Batcher:
@@ -212,7 +206,7 @@ def main(args):
     start_time = time()
 
     # Load encoder
-    device = determine_device(args)
+    device = determine_device(args.gpu)
     encoder, dictionary = load_encoder_from_file(args.model)
     encoder = encoder.eval()
     encoder = encoder.to(device)
