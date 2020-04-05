@@ -154,7 +154,7 @@ class Encoder(nn.Module):
         return x.reshape(self.num_layers, -1, self.output_units)
 
 
-def load_model_from_file(model_path: str):
+def load_encoder_from_file(model_path: str) -> Tuple[Encoder, dict]:
     # Load state_dict
     state_dict = torch.load(model_path, map_location='cpu')
     if 'left_pad' in state_dict['params']:

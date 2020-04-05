@@ -15,7 +15,7 @@ import torch
 import numpy as np
 
 from laser.data import Batcher, Batch
-from laser.encoder import load_model_from_file
+from laser.encoder import load_encoder_from_file
 from laser.utils import open_text_file
 from laser import generator_utils as gen_utils
 
@@ -213,7 +213,7 @@ def main(args):
 
     # Load encoder
     device = determine_device(args)
-    encoder, dictionary = load_model_from_file(args.model)
+    encoder, dictionary = load_encoder_from_file(args.model)
     encoder = encoder.eval()
     encoder = encoder.to(device)
     if args.fp16:
