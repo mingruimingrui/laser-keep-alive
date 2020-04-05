@@ -163,5 +163,6 @@ def load_model_from_file(model_path: str):
     # Create encoder
     encoder = Encoder(**state_dict['params'])
     encoder.load_state_dict(state_dict['model'])
+    encoder.eval()
 
     return encoder, state_dict['dictionary']
