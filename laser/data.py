@@ -3,12 +3,10 @@
 
 import warnings
 import unicodedata
-from typing import Iterator, Generator, Tuple, List, Optional
+from typing import NamedTuple, Iterator, Generator, List, Optional
 
 import torch
 import numpy as np
-
-BATCH_TYPE = Tuple[List[int], List[str], torch.Tensor, torch.Tensor]
 
 
 class Tokenizer(object):
@@ -83,6 +81,13 @@ class Tokenizer(object):
             text = self.translit(text, language_code='el')
 
         return text
+
+
+class Batch(NamedTuple):
+    indices: List[int]
+    texts: List[str]
+    tokens: torch.Tensor
+    lengths: torch.Tensor
 
 
 class Batcher(object):
@@ -179,7 +184,7 @@ class Batcher(object):
 
     def make_batches(
         self, texts: Iterator[str]
-    ) -> Generator[BATCH_TYPE, None, None]:
+    ) -> Generator[Batch, None, None]:
         """Create batches from raw texts
         Sequences in each batch will be sorted based on longest to shortest.
         Batches will also be right padded.
@@ -223,11 +228,11 @@ class Batcher(object):
             ):
                 # yield cur batch
                 batch_tokens = self._collate_tokens(batch_tokens)
-                yield (
-                    batch_indices,
-                    batch_texts,
-                    batch_tokens,
-                    torch.LongTensor([len(t) for t in batch_tokens])
+                yield Batch(
+                    indices=batch_indices,
+                    texts=batch_texts,
+                    tokens=batch_tokens,
+                    lengths=torch.LongTensor([len(t) for t in batch_tokens])
                 )
                 batch_indices = []
                 batch_texts = []
@@ -241,9 +246,9 @@ class Batcher(object):
 
         if len(batch_tokens) > 0:
             batch_tokens = self._collate_tokens(batch_tokens)
-            yield (
-                batch_indices,
-                batch_texts,
-                batch_tokens,
-                torch.LongTensor([len(t) for t in batch_tokens])
+            yield Batch(
+                indices=batch_indices,
+                texts=batch_texts,
+                tokens=batch_tokens,
+                lengths=torch.LongTensor([len(t) for t in batch_tokens])
             )

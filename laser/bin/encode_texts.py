@@ -14,7 +14,7 @@ from tqdm import tqdm
 import torch
 import numpy as np
 
-from laser.data import Batcher, BATCH_TYPE
+from laser.data import Batcher, Batch
 from laser.encoder import load_model_from_file
 from laser.utils import open_text_file
 from laser import generator_utils as gen_utils
@@ -143,14 +143,20 @@ def create_input_stream(
 
 
 def create_batches(
-    params: Tuple[List[str], dict, argparse.Namespace]
-) -> List[BATCH_TYPE]:
+    params: Tuple[
+        List[str],
+        dict,
+        argparse.Namespace
+    ]
+) -> List[Batch]:
     """Worker function used to form batches from list of text
 
     Arguments:
         params {Tuple[List[str], dict, argparse.Namespace]} --
-            Consists of the list of text to batch, dictionary for batcher,
-            and parsed commandline options.
+            Consists of the following
+            - List of raw texts
+            - Token dictionary
+            - Parsed commandline options
 
     Returns:
         List[BATCH_TYPE] -- List of batches formed from raw texts.
@@ -226,18 +232,18 @@ def main(args):
 
     # Define process_batches fn
     @torch.no_grad()
-    def process_batches(batches):
+    def process_batches(batches: List[Batch]) -> Tuple[List[str], np.ndarray]:
         chunk_size = sum([len(batch[0]) for batch in batches])
         chunk_texts = [None] * chunk_size
         chunk_embeddings = [None] * chunk_size
-        for indices, texts, tokens, lengths in batches:
+        for b in batches:
             outputs = encoder.forward(
-                tokens.to(device),
-                lengths.to(device)
+                b.tokens.to(device),
+                b.lengths.to(device),
             ).sentemb
             outputs = outputs.detach().cpu().numpy()
 
-            for i, text, embedding in zip(indices, texts, outputs):
+            for i, text, embedding in zip(b.indices, b.texts, outputs):
                 chunk_texts[i] = text
                 chunk_embeddings[i] = embedding
 
