@@ -259,22 +259,34 @@ def main(args):
     # 1. Create batches (on subprocesses)
     # 2. Inference with bilstm
     # 3. Save results to file
-    with tqdm() as pbar:
+    with tqdm(unit='sent') as pbar:
         with multiprocessing.Pool(num_workers) as pool:
-            for src_batches, tgt_batches in pool.imap(
-                create_batches, create_loader()
-            ):
+            batches_generator = pool.imap(create_batches, create_loader())
+
+            t0 = time()
+            for src_batches, tgt_batches in batches_generator:
                 semaphore.release()
 
+                t1 = time()
                 src_texts, src_embeddings = process_batches(src_batches)
                 tgt_texts, tgt_embeddings = process_batches(tgt_batches)
-                pbar.update(len(src_texts))
 
+                t2 = time()
+                torch.cuda.empty_cache()
                 append_results_to_file(
                     src_texts, src_embeddings,
                     tgt_texts, tgt_embeddings,
                     args,
                 )
+
+                t3 = time()
+                pbar.set_postfix({
+                    'data_time': t1 - t0,
+                    'inference_time': t2 - t1,
+                    'write_time': t3 - t2,
+                })
+                pbar.update(len(src_texts))
+                t0 = time()
 
     time_taken = time() - start_time
     print('Finished in {:.1f}s'.format(time_taken))
