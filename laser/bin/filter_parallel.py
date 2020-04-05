@@ -177,8 +177,10 @@ def append_results_to_file(
 
     src_outpath = '{}.{}'.format(args.output, args.langs[0])
     tgt_outpath = '{}.{}'.format(args.output, args.langs[1])
-    src_embeddings = src_embeddings.astype(np.float32)
-    tgt_embeddings = tgt_embeddings.astype(np.float32)
+    if src_embeddings.dtype != np.float32:
+        src_embeddings = src_embeddings.astype(np.float32)
+    if tgt_embeddings.dtype != np.float32:
+        tgt_embeddings = tgt_embeddings.astype(np.float32)
     l2_dists = np.sqrt(np.sum((src_embeddings - tgt_embeddings) ** 2, axis=1))
 
     with open_text_file(src_outpath, 'a') as fsrc:
