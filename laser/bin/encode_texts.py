@@ -2,6 +2,7 @@
 """
 
 import os
+import io
 import argparse
 from typing import Generator, List, Tuple
 
@@ -42,7 +43,7 @@ def add_options(parser: argparse.ArgumentParser) -> argparse.ArgumentParser:
         help='File to store outputs')
     io_group.add_argument(
         '--output-format', metavar='FORMAT', type=str,
-        choices=['h5py', 'csv'], default='h5py',
+        choices=['npy', 'csv'], default='npy',
         help='The output format')
     io_group.add_argument(
         '--output-fp16', action='store_true',
@@ -160,73 +161,34 @@ def create_batches(
     return batches
 
 
-def init_output_file(dim: int, args: argparse.Namespace):
-    """Initialize output file
-
-    Arguments:
-        dim {int} -- Embedding dimension size
-        args {argparse.Namespace} -- Parsed commandline options
-
-    Raises:
-        ValueError: output_format is invalid
-    """
-    output = os.path.abspath(args.output)
-    if os.path.isfile(output):
-        os.remove(output)
-
-    os.makedirs(os.path.dirname(output), exist_ok=True)
-
-    if args.output_format == 'h5py':
-        import h5py
-        with h5py.File(output, 'w') as f:
-            f.create_dataset(
-                name='embeddings',
-                dtype=np.float16 if args.output_fp16 else np.float32,
-                shape=(0, dim),
-                maxshape=(None, dim)
-            )
-
-    elif args.output_format == 'csv':
-        with open_text_file(output, 'w') as f:
-            pass
-
-    else:
-        msg = 'Unexpected output format "{}"'.format(args.output_format)
-        raise ValueError(msg)
-
-
-def append_results_to_file(embeddings: np.array, args: argparse.Namespace):
+def append_results_to_file(
+    embeddings: np.array,
+    f: io.BufferedWriter,
+    args: argparse.Namespace
+):
     """Appends embeddings to output file
 
     Arguments:
         embeddings {np.array} -- Newly generated embeddings
+        f {io.BufferedWriter} -- A bytes writier to store outputs
         args {argparse.Namespace} -- Parsed commandline options
 
     Raises:
         ValueError: output_format is invalid
     """
     output_dtype = np.float16 if args.output_fp16 else np.float32
-    embeddings = embeddings.astype(output_dtype)
+    if embeddings.dtype != output_dtype:
+        embeddings = embeddings.astype(output_dtype)
 
-    if args.output_format == 'h5py':
-        import h5py
-        with h5py.File(args.output, 'r+') as f:
-            assert 'embeddings' in f
-            embedding_dataset = f['embeddings']
-            assert embedding_dataset.shape[1] == embeddings.shape[1]
-            embedding_dataset.resize(
-                embedding_dataset.shape[0] + embeddings.shape[0],
-                axis=0
-            )
-            embedding_dataset[-embeddings.shape[0]:] = embeddings
+    if args.output_format == 'npy':
+        embeddings.tofile(f)
 
     elif args.output_format == 'csv':
         import pandas as pd
         df = pd.DataFrame(embeddings)
         buffer = df.to_csv(header=False, index=False)
         assert buffer.endswith('\n')
-        with open_text_file(args.output, 'a') as f:
-            f.write(buffer)
+        f.write(buffer.encode('utf-8'))
 
     else:
         msg = 'Unexpected output format "{}"'.format(args.output_format)
@@ -281,19 +243,24 @@ def main(args):
 
         return chunk_texts, np.array(chunk_embeddings)
 
-    init_output_file(encoder.output_units, args)
+    # Remove existing output file if needed
+    output_path = os.path.abspath(args.output)
+    if os.path.isfile(output_path):
+        os.remove(output_path)
+    os.makedirs(os.path.dirname(output_path), exist_ok=True)
 
     # Loop through each chunk
     # 1. Create batches (on subprocesses)
     # 2. Inference with bilstm
     # 3. Save results to file
-    with tqdm() as pbar:
-        with multiprocessing.Pool(num_workers) as pool:
-            for batches in pool.imap(create_batches, create_loader()):
-                semaphore.release()
-                _, embeddings = process_batches(batches)
-                pbar.update(len(embeddings))
-                append_results_to_file(embeddings, args)
+    with open(output_path, 'wb') as f:
+        with tqdm() as pbar:
+            with multiprocessing.Pool(num_workers) as pool:
+                for batches in pool.imap(create_batches, create_loader()):
+                    semaphore.release()
+                    _, embeddings = process_batches(batches)
+                    pbar.update(len(embeddings))
+                    append_results_to_file(embeddings, f, args)
 
     time_taken = time() - start_time
     print('Finished in {:.1f}s'.format(time_taken))
