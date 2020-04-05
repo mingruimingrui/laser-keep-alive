@@ -3,12 +3,13 @@ from laser import bin as laser_bin
 
 
 def make_parser() -> argparse.ArgumentParser:
-    description = (
-        'Language-Agnostic SEntence Representations\n'
-        'https://github.com/facebookresearch/LASER/'
+    parser = argparse.ArgumentParser(
+        prog='python -m laser',
+        description=(
+            'Language-Agnostic SEntence Representations\n'
+            'https://github.com/facebookresearch/LASER/'
+        ),
     )
-
-    parser = argparse.ArgumentParser(description=description)
     subparsers = parser.add_subparsers(dest='subcommand')
 
     encode_parser = subparsers.add_parser(
