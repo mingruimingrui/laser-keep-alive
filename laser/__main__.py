@@ -5,10 +5,7 @@ from laser import bin as laser_bin
 def make_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(
         prog='python -m laser',
-        description=(
-            'Language-Agnostic SEntence Representations\n'
-            'https://github.com/facebookresearch/LASER/'
-        ),
+        description='Language-Agnostic SEntence Representations',
     )
     subparsers = parser.add_subparsers(dest='subcommand')
 
