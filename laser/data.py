@@ -138,6 +138,26 @@ class Batcher(object):
         self.max_sents = max_sents
         self.max_tokens = max_tokens
 
+    def _text_to_token_ids(self, text: str) -> List[int]:
+        """Convert a text into a list of token ids
+        Sentence that is too long will be truncated
+
+        Arguments:
+            text {str} -- BPE encoded text
+
+        Returns:
+            List[int] -- List of token ids
+        """
+        tokens = [self.dictionary.get(t, self.unk_index) for t in text.split()]
+        if len(tokens) > self.max_seq_length - 1:
+            warnings.warn((
+                'Found sentence with over {} tokens '
+                'sentence will be truncated to a valid length'
+            ).format(self.max_seq_length))
+            tokens = tokens[:(self.max_seq_length - 1)]
+        tokens.append(self.eos_index)
+        return tokens
+
     def _process_texts(self, texts: List[str]) -> List[List[int]]:
         """Process a list of texts
 
@@ -149,12 +169,7 @@ class Batcher(object):
         """
         texts = [self.tokenizer.tokenize(t) for t in texts]
         texts = self.bpe_model.apply(texts)
-        return [
-            [
-                self.dictionary.get(t, self.unk_index)
-                for t in text.split()
-            ] + [self.eos_index] for text in texts
-        ]
+        return [self._text_to_token_ids(text) for text in texts]
 
     def _collate_tokens(self, tokens: List[List[int]]) -> torch.Tensor:
         """Right pad a list of token ids
@@ -170,13 +185,7 @@ class Batcher(object):
 
         def pad_toks(toks: List[int]) -> List[int]:
             length = len(toks)
-            if length > self.max_seq_length:
-                warnings.warn((
-                    'Found sentence with over {} tokens '
-                    'sentence will be truncated to a valid length'
-                ).format(self.max_seq_length))
-                toks = toks[:self.max_seq_length]
-            elif length < batch_length:
+            if length < batch_length:
                 toks += [self.pad_index] * (batch_length - length)
             return toks
 
