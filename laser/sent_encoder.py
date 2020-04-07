@@ -66,7 +66,7 @@ class SentenceEncoder(nn.Module):
         device = self.encoder.embed_tokens.weight.device
 
         embeddings = [None] * len(texts)
-        for batch in Batcher.make_batches(texts):
+        for batch in self.batcher.make_batches(texts):
             outputs = self.encoder(
                 batch.tokens.to(device),
                 batch.lengths.to(device),
