@@ -55,8 +55,8 @@ def add_options(parser: argparse.ArgumentParser) -> argparse.ArgumentParser:
         '-l', '--lang', metavar='LANG', type=str, required=True,
         help='Langauge identifier')
     model_group.add_argument(
-        '-b', '--bpe-path', metavar='FILE', type=str, nargs=2, required=True,
-        help='Path to the bpe code and vocab files')
+        '-b', '--bpe-codes', metavar='FILE', type=str, required=True,
+        help='Path to the bpe codes')
     model_group.add_argument(
         '-m', '--model', metavar='FILE', type=str, required=True,
         help='Path to the LASER bilstm model')
@@ -94,8 +94,7 @@ def add_options(parser: argparse.ArgumentParser) -> argparse.ArgumentParser:
 def create_batcher(dictionary: dict, args: argparse.Namespace) -> Batcher:
     return Batcher(
         lang=args.lang,
-        bpe_codes=args.bpe_path[0],
-        bpe_vocab=args.bpe_path[1],
+        bpe_codes=args.bpe_codes,
         dictionary=dictionary,
         max_seq_length=args.max_seq_len,
         max_sents=args.max_sents,
