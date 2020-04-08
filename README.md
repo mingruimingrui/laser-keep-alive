@@ -32,7 +32,6 @@ sent_encoder = SentenceEncoder(
     lang='en',
     model_path=path_to_model_file,
     bpe_codes=path_to_bpe_codes_file,
-    bpe_vocab=path_to_bpe_vocab_file,
 )
 
 # Encode texts
