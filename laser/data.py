@@ -59,6 +59,9 @@ class Tokenizer(object):
         Returns:
             str -- Tokens joined by whitespace
         """
+        if text == '':
+            return ''
+
         text = text.lower()
         text = unicodedata.normalize('NFKC', text)
         text = self.punct_normalizer.normalize(text)
