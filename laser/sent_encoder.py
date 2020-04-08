@@ -18,7 +18,7 @@ class SentenceEncoder(nn.Module):
         bpe_codes: str,
         max_seq_length: int = 256,
         max_sents: Optional[int] = None,
-        max_tokens: Optional[int] = None,
+        max_tokens: Optional[int] = 12000,
     ):
         """Wrapper around Encoder and Batcher to encode sentences
 
@@ -34,7 +34,7 @@ class SentenceEncoder(nn.Module):
             max_sents {Optional[int]} --
                 Maximum number of sentences per batch (default: {None})
             max_tokens {Optional[int]} --
-                Maximum number of tokens per batch (default: {None})
+                Maximum number of tokens per batch (default: {12000})
         """
         super().__init__()
         self.encoder, dictionary = load_encoder_from_file(model_path)

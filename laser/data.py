@@ -102,7 +102,7 @@ class Batcher(object):
         dictionary: dict,
         max_seq_length: int = 256,
         max_sents: Optional[int] = None,
-        max_tokens: Optional[int] = None
+        max_tokens: Optional[int] = 12000
     ):
         self.lang = lang
 
