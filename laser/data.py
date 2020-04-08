@@ -59,6 +59,9 @@ class Tokenizer(object):
         Returns:
             str -- Tokens joined by whitespace
         """
+        if text == '':
+            return ''
+
         text = text.lower()
         text = unicodedata.normalize('NFKC', text)
         text = self.punct_normalizer.normalize(text)
@@ -96,11 +99,10 @@ class Batcher(object):
         self,
         lang: str,
         bpe_codes: str,
-        bpe_vocab: str,
         dictionary: dict,
         max_seq_length: int = 256,
         max_sents: Optional[int] = None,
-        max_tokens: Optional[int] = None
+        max_tokens: Optional[int] = 12000
     ):
         self.lang = lang
 
@@ -111,7 +113,7 @@ class Batcher(object):
             raise ImportError('Please install fastBPE first')
 
         self.tokenizer = Tokenizer(lang=lang)
-        self.bpe_model = fastBPE(bpe_codes, bpe_vocab)
+        self.bpe_model = fastBPE(bpe_codes)
 
         # Set dictionary
         assert (

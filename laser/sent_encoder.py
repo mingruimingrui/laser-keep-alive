@@ -16,10 +16,9 @@ class SentenceEncoder(nn.Module):
         lang: str,
         model_path: str,
         bpe_codes: str,
-        bpe_vocab: str,
         max_seq_length: int = 256,
         max_sents: Optional[int] = None,
-        max_tokens: Optional[int] = None,
+        max_tokens: Optional[int] = 12000,
     ):
         """Wrapper around Encoder and Batcher to encode sentences
 
@@ -28,7 +27,6 @@ class SentenceEncoder(nn.Module):
                 (this would only affect preprocessing)
             model_path {str} -- Path to model file
             bpe_codes {str} -- Path to bpe codes file
-            bpe_vocab {str} -- Path to bpe vocab file
 
         Keyword Arguments:
             max_seq_length {int} --
@@ -36,14 +34,13 @@ class SentenceEncoder(nn.Module):
             max_sents {Optional[int]} --
                 Maximum number of sentences per batch (default: {None})
             max_tokens {Optional[int]} --
-                Maximum number of tokens per batch (default: {None})
+                Maximum number of tokens per batch (default: {12000})
         """
         super().__init__()
         self.encoder, dictionary = load_encoder_from_file(model_path)
         self.batcher = Batcher(
             lang=lang,
             bpe_codes=bpe_codes,
-            bpe_vocab=bpe_vocab,
             dictionary=dictionary,
             max_seq_length=max_seq_length,
             max_sents=max_sents,
@@ -66,7 +63,7 @@ class SentenceEncoder(nn.Module):
         device = self.encoder.embed_tokens.weight.device
 
         embeddings = [None] * len(texts)
-        for batch in Batcher.make_batches(texts):
+        for batch in self.batcher.make_batches(texts):
             outputs = self.encoder(
                 batch.tokens.to(device),
                 batch.lengths.to(device),

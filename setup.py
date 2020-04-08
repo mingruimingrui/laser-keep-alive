@@ -24,7 +24,7 @@ setuptools.setup(
     name='laser-keep-alive',
     version=version,
     description='Keeping the original LASER project alive',
-    author='Wang M. R.',
+    author='Wang Ming Rui',
     author_email='mingruimingrui@hotmail.com',
     url='https://github.com/mingruimingrui/laser-keep-alive',
 
