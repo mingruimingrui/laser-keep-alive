@@ -3,7 +3,7 @@ Cython>=0.29.6
 
 torch>=1.0
 fastBPE==0.1.0
-sacremoses==0.0.38
+mosestokenizer==0.0.38
 
 jieba==0.39
 opencc-python-reimplemented>=0.1

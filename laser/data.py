@@ -16,6 +16,9 @@ import torch
 import numpy as np
 
 
+MOSES_CHUNK_SIZE = 128
+
+
 class Tokenizer(object):
 
     def __init__(self, lang: str = 'en'):
@@ -34,12 +37,13 @@ class Tokenizer(object):
             ImportError: Requires sacremoses
         """
         try:
-            from sacremoses import MosesPunctNormalizer, MosesTokenizer
+            from mosestokenizer import \
+                MosesPunctuationNormalizer, MosesTokenizer
         except ImportError:
             raise ImportError('Please install sacremoses')
 
         self.lang = lang
-        self.punct_normalizer = MosesPunctNormalizer(lang=lang)
+        self.punct_normalizer = MosesPunctuationNormalizer(lang=lang)
         self.tokenizer = MosesTokenizer(lang=lang)
 
         if self.lang == 'zh':
@@ -57,40 +61,61 @@ class Tokenizer(object):
             import transliterate
             self.translit = transliterate.translit
 
-    def tokenize(self, text: str) -> str:
+    def tokenize(self, texts: List[str]) -> List[str]:
         """Tokenizes a string. Output is string rather than list of tokens.
 
         Arguments:
-            text {str} -- Raw input string
+            text {List[str]} -- Raw input texts
 
         Returns:
-            str -- Tokens joined by whitespace
+            List[str] -- Tokenized sentences
         """
-        if text == '':
-            return ''
+        texts = [' '.join(t.lower().split()) for t in texts]
+        tokenized_texts = []
+        for i in range(0, len(texts), MOSES_CHUNK_SIZE):
+            chunk = texts[i:(i + MOSES_CHUNK_SIZE)]
 
-        text = text.lower()
-        text = unicodedata.normalize('NFKC', text)
-        text = self.punct_normalizer.normalize(text)
-        text = self.tokenizer.tokenize(
-            text,
-            aggressive_dash_splits=False,
-            return_str=True,
-            escape=False
-        )
+            # Normalize punctuations
+            [self.punct_normalizer.writeline(t) for t in chunk]
+
+            # Tokenize
+            [self.tokenizer.writeline(
+                self.punct_normalizer.readline()
+            ) for _ in chunk]
+
+            tokenized_texts += [self.tokenizer.readline() for _ in chunk]
+            # This may seem like a lot of for loops
+            # but the overhead of tokenization should be much higher
+            # Also this is an efficient way to buffer I/O to/from the
+            # perl scripts
+
+            # Random note: it might be possible to run these piped processes
+            # on a separate thread.
+            # Would not improve the current performance of this script by
+            # much but still a cool experiment.
 
         if self.lang == 'zh':
-            text = self.opencc_converter.convert(text)
-            tokens = self.jieba_tokenizer.cut(text, cut_all=False, HMM=True)
-            text = ' '.join(tokens)
+            texts = [
+                ' '.join(self.jieba_tokenizer.cut(
+                    self.opencc_converter.convert(text),
+                    cut_all=False, HMM=True
+                ))
+                for text in texts
+            ]
 
         elif self.lang == 'jp':
-            text = self.wakati.parse(text)
+            texts = [
+                self.wakati.parse(text) if len(text) > 0 else ''
+                for text in texts
+            ]
 
         elif self.lang == 'el':
-            text = self.translit(text, language_code='el')
+            texts = [
+                self.translit(text, language_code='el')
+                for text in texts
+            ]
 
-        return text
+        return texts
 
 
 class Batch(NamedTuple):
@@ -177,7 +202,7 @@ class Batcher(object):
         Returns:
             List[List[int]] -- List of token ids
         """
-        texts = [self.tokenizer.tokenize(t) for t in texts]
+        texts = self.tokenizer.tokenize(texts)
         texts = self.bpe_model.apply(texts)
         return [self._text_to_token_ids(text) for text in texts]
 
