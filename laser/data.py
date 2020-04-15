@@ -1,6 +1,13 @@
-"""Data processing and loading classes and helper functions
-"""
+# Copyright (c) 2020 mingruimingrui
+# Copyright (c) Facebook, Inc. and its affiliates.
+# All rights reserved.
+#
+# This source code is licensed under the BSD-style license found in the
+# LICENSE file in the root directory of this source tree.
 
+"""Data processing and loading classes and helper functions"""
+
+import os
 import warnings
 import unicodedata
 from typing import NamedTuple, Iterator, Generator, List, Optional
@@ -111,6 +118,7 @@ class Batcher(object):
             from fastBPE import fastBPE
         except ImportError:
             raise ImportError('Please install fastBPE first')
+        assert os.path.isfile(bpe_codes)
 
         self.tokenizer = Tokenizer(lang=lang)
         self.bpe_model = fastBPE(bpe_codes)

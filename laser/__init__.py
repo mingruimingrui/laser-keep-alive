@@ -1,3 +1,10 @@
+# Copyright (c) 2020 mingruimingrui
+# Copyright (c) Facebook, Inc. and its affiliates.
+# All rights reserved.
+#
+# This source code is licensed under the BSD-style license found in the
+# LICENSE file in the root directory of this source tree.
+
 from laser.data import Batch, Batcher
 from laser.encoder import EncoderOuts, Encoder
 from laser.sent_encoder import SentenceEncoder

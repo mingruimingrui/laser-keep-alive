@@ -1,5 +1,12 @@
-"""Helper functions to work with generators
-"""
+# Copyright (c) 2020 mingruimingrui
+# Copyright (c) Facebook, Inc. and its affiliates.
+# All rights reserved.
+#
+# This source code is licensed under the BSD-style license found in the
+# LICENSE file in the root directory of this source tree.
+
+"""Helper functions to work with generators"""
+
 import time
 import queue
 import threading
