@@ -56,7 +56,7 @@ def add_options(parser: argparse.ArgumentParser):
         help='L2 distance threshold to filter sentence pairs')
     filter_group.add_argument(
         '--output-filtered', action='store_true',
-        help='Write filtered data to <output_file>.removed')
+        help='Write filtered data to <output_file>.filtered')
 
     # Inference options
     inference_group = parser.add_argument_group('Inference options')
