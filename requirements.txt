@@ -3,10 +3,10 @@ Cython>=0.29.6
 
 torch>=1.0
 fastBPE==0.1.0
-mosestokenizer==0.0.38
+mosestokenizer==1.1.0
 
 jieba==0.39
-opencc-python-reimplemented>=0.1
+opencc-python-reimplemented==0.1.5
 transliterate==1.10.2
 mecab-python3==0.996.5
 
