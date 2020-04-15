@@ -107,6 +107,8 @@ and give it a star ⭐.
 # License
 
 **`laser-keep-alive`** is MIT-licensed and **`LASER`** is BSD-licensed.
+If you wish to use **`laser-keep-alive`** please remember to include the
+copyright notice.
 
 
 # Citation
