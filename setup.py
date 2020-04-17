@@ -5,7 +5,7 @@ import setuptools
 
 _this_dir = os.path.abspath(os.path.dirname(__file__))
 
-# parse version from ./laser/__init__.py
+# Parse version from ./laser/__init__.py
 _version_re = re.compile(r'__version__\s+=\s+(.*)')
 _init_file = os.path.join(_this_dir, 'laser', '__init__.py')
 with open(_init_file, 'rb') as f:
@@ -13,17 +13,27 @@ with open(_init_file, 'rb') as f:
         f.read().decode('utf-8')).group(1)))
 
 
-# parse requirements form ./requirements.txt
+# Parse requirements form ./requirements.txt
 _requirements_file = os.path.join(_this_dir, 'requirements.txt')
 with open(_requirements_file, 'rb') as f:
     install_requires = [l.decode('utf-8').strip() for l in f]
+
+
+# Parse long description from ./README.md
+_readme_file = os.path.join(_this_dir, 'README.md')
+with open(_readme_file, 'rb') as f:
+    long_description = f.read().decode('utf-8')
 
 
 setuptools.setup(
     # General information
     name='laser-keep-alive',
     version=version,
+
     description='Keeping the original LASER project alive',
+    long_description=long_description,
+    long_description_content_type='text/markdown',
+
     author='Wang Ming Rui',
     author_email='mingruimingrui@hotmail.com',
     url='https://github.com/mingruimingrui/laser-keep-alive',

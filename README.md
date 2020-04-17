@@ -1,6 +1,6 @@
 **laser-keep-alive** is a project aimed at providing a stable run time
 environment for the open-source Facebook AI Research (FAIR) project,
-Language-Agnostic SEntence Representations (LASER).
+[Language-Agnostic SEntence Representations (LASER)](https://github.com/facebookresearch/LASER/).
 
 
 # Installation
