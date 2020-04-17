@@ -133,4 +133,4 @@ models/
 
 # Development
 .vscode
-.sync.sh
+sync.sh

@@ -24,6 +24,7 @@ from laser.data import Batcher, Batch
 from laser.encoder import load_encoder_from_file
 from laser.utils import open_text_file, determine_device
 from laser import generator_utils as gen_utils
+from laser.pretrained import CACHE_DIR, get_pretrained_model_paths
 
 CACHE = {}
 
@@ -61,10 +62,13 @@ def add_options(parser: argparse.ArgumentParser) -> argparse.ArgumentParser:
         '-l', '--lang', metavar='LANG', type=str, required=True,
         help='Langauge identifier')
     model_group.add_argument(
-        '-b', '--bpe-codes', metavar='FILE', type=str, required=True,
+        '-c', '--cache-dir', metavar='DIR', type=str, default=CACHE_DIR,
+        help='Path to the directory where model is cached')
+    model_group.add_argument(
+        '-b', '--bpe-codes', metavar='FILE', type=str,
         help='Path to the bpe codes')
     model_group.add_argument(
-        '-m', '--model', metavar='FILE', type=str, required=True,
+        '-m', '--model', metavar='FILE', type=str,
         help='Path to the LASER bilstm model')
 
     # Inference options
@@ -95,6 +99,13 @@ def add_options(parser: argparse.ArgumentParser) -> argparse.ArgumentParser:
         help='Number of workers to use to generate new batches')
 
     return parser
+
+
+def download_pretrained_models(args: argparse.Namespace):
+    if args.bpe_codes is None:
+        args.bpe_codes = get_pretrained_model_paths(args.cache_dir)[0]
+    if args.model is None:
+        args.model = get_pretrained_model_paths(args.cache_dir)[1]
 
 
 def create_batcher(dictionary: dict, args: argparse.Namespace) -> Batcher:
@@ -207,6 +218,9 @@ def main(args):
     else:
         from multiprocessing import dummy as multiprocessing
         num_workers = 1
+
+    # Download pretrained model if needed
+    download_pretrained_models(args)
 
     start_time = time()
 

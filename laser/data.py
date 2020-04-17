@@ -9,7 +9,6 @@
 
 import os
 import warnings
-import unicodedata
 from typing import NamedTuple, Iterator, Generator, List, Optional
 
 import torch
